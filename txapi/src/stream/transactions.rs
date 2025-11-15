@@ -1,6 +1,7 @@
 use futures::{stream::select_all, Stream, StreamExt};
 use std::time::Duration;
 use tokio::sync::broadcast;
+use tokio_util::sync::CancellationToken;
 
 use crate::domain::prelude::*;
 
@@ -14,7 +15,11 @@ use crate::domain::prelude::*;
 /// This initializer is meant to be used to create a broadcaster at App State level,
 /// in order to make it available to the websocket handler.
 ///
-pub async fn channel() -> (
+/// The cancellation_token parameter allows for graceful shutdown of the background task.
+///
+pub async fn channel(
+    cancellation_token: CancellationToken,
+) -> (
     broadcast::Sender<Transaction>,
     broadcast::Receiver<Transaction>,
 ) {
@@ -34,10 +39,21 @@ pub async fn channel() -> (
     // spawn the message stream processor
     let tx_clone = tx.clone();
     tokio::spawn(async move {
-        while let Some(transaction) = stream.next().await {
-            // ignore send errors (occurs when no receivers)
-            // TODO: handle this gracefully
-            let _ = tx_clone.send(transaction);
+        loop {
+            tokio::select! {
+                // Check for cancellation signal
+                _ = cancellation_token.cancelled() => {
+                    tracing::info!("Transaction stream shutting down gracefully");
+                    break;
+                }
+                // Process next transaction
+                transaction = stream.next() => {
+                    if let Some(transaction) = transaction {
+                        // ignore send errors (occurs when no receivers)
+                        let _ = tx_clone.send(transaction);
+                    }
+                }
+            }
         }
     });
     (tx, rx)

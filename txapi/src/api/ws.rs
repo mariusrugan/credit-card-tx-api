@@ -13,7 +13,7 @@ use futures::{
 use models::{ChannelMsg, WsMessage};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{error, info};
+use tracing::{debug, error};
 
 /// The endpoint for the websocket API.
 ///
@@ -45,14 +45,14 @@ async fn handle(socket: WebSocket, state: AppState) {
         res = &mut read_task => {
             write_task.abort();
             match res {
-                Ok(_) => info!("read task completed successfully."),
+                Ok(_) => debug!("read task completed successfully."),
                 Err(err) => error!("read task encountered an error: {:?}", err),
             }
         },
         res = &mut write_task => {
             read_task.abort();
             match res {
-                Ok(_) => info!("write task completed successfully."),
+                Ok(_) => debug!("write task completed successfully."),
                 Err(err) => error!("write task encountered an error: {:?}", err),
             }
         },
@@ -134,7 +134,7 @@ async fn handle_incoming(msg: &WsMessage, client: &mut client::WsClient) {
             Err(e) => error!("Invalid channel: {}", e),
             Ok(channel) => {
                 client.subscribe(channel);
-                info!("Successfully subscribed to {} channel", params.channel)
+                debug!("Successfully subscribed to {} channel", params.channel)
             }
         },
 
@@ -143,7 +143,7 @@ async fn handle_incoming(msg: &WsMessage, client: &mut client::WsClient) {
             Err(e) => error!("Invalid channel: {}", e),
             Ok(channel) => {
                 client.unsubscribe(channel);
-                info!("Successfully unsubscribed from {} channel", params.channel)
+                debug!("Successfully unsubscribed from {} channel", params.channel)
             }
         },
     }
@@ -153,7 +153,7 @@ async fn handle_incoming(msg: &WsMessage, client: &mut client::WsClient) {
 async fn send(tx: &mut SplitSink<WebSocket, Message>, msg: ChannelMsg) {
     if let Ok(serialized) = serde_json::to_string(&msg) {
         match tx.send(Message::Text(serialized.into())).await {
-            Ok(_) => info!("sent message: {:?}", msg),
+            Ok(_) => debug!("sent message: {:?}", msg),
             Err(e) => error!("error sending message: {:?}", e),
         }
     }

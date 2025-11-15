@@ -1,6 +1,7 @@
 use futures::{Stream, StreamExt};
 use std::time::Duration;
 use tokio::sync::broadcast;
+use tokio_util::sync::CancellationToken;
 
 use crate::domain::prelude::*;
 
@@ -10,14 +11,31 @@ use crate::domain::prelude::*;
 /// This initializer is meant to be used to create a broadcaster at App State level,
 /// in order to make it available to the websocket handler.
 ///
-pub async fn channel() -> (broadcast::Sender<Heartbeat>, broadcast::Receiver<Heartbeat>) {
+/// The cancellation_token parameter allows for graceful shutdown of the background task.
+///
+pub async fn channel(
+    cancellation_token: CancellationToken,
+) -> (broadcast::Sender<Heartbeat>, broadcast::Receiver<Heartbeat>) {
     let (tx, rx) = broadcast::channel(16);
     let tx_clone = tx.clone();
 
     let mut stream = stream_heartbeats_every_10_secs();
     tokio::spawn(async move {
-        while let Some(heartbeat) = stream.next().await {
-            let _ = tx_clone.send(heartbeat);
+        loop {
+            tokio::select! {
+                // Check for cancellation signal
+                _ = cancellation_token.cancelled() => {
+                    tracing::info!("Heartbeat stream shutting down gracefully");
+                    break;
+                }
+                // Process next heartbeat
+                heartbeat = stream.next() => {
+                    if let Some(heartbeat) = heartbeat {
+                        tracing::info!("Broadcasting heartbeat: {:?}", heartbeat);
+                        let _ = tx_clone.send(heartbeat);
+                    }
+                }
+            }
         }
     });
     (tx, rx)

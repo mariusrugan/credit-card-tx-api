@@ -11,11 +11,85 @@ The websocketAPI has two channels:
 - `transactions`: for getting credit card transactions in realtime
 
 ## Local Setup
+
+### Running the Server
+
 Run `make run` to start the API locally.
-The API will be available at `ws://localhost:9999/v1`.
+The API will be available at `ws://0.0.0.0:9999/ws/v1`.
+
+Alternatively, use cargo directly:
+```bash
+cargo run
+```
+
+### Configuration
+
+#### Log Level
+Control the logging verbosity using the `LOG_LEVEL` environment variable:
+
+```bash
+LOG_LEVEL=DEBUG cargo run
+
+```
+
+#### Graceful Shutdown
+Press `Ctrl+C` to gracefully shutdown the server. The server will:
+- Stop accepting new connections
+- Complete existing requests
+- Cleanly shutdown background tasks
+- Exit cleanly
+
+### Running with Docker
+
+The project includes a Dockerfile using secure Chainguard base images.
+
+#### Build the Docker image:
+```bash
+docker build -t txapi:latest .
+```
+
+#### Run the container:
+```bash
+# Run with default settings (INFO log level)
+docker run -p 9999:9999 txapi:latest
+
+# Run with DEBUG log level
+docker run -p 9999:9999 -e LOG_LEVEL=DEBUG txapi:latest
+
+# Run in detached mode
+docker run -d -p 9999:9999 --name txapi txapi:latest
+```
+
+The WebSocket API will be available at `ws://localhost:9999/ws/v1`
+
+#### Stop the container:
+```bash
+docker stop txapi
+docker rm txapi
+```
+
+#### Health Check:
+The application includes a health check endpoint at `/health` that returns:
+```json
+{
+  "status": "ok",
+  "version": "0.1.0"
+}
+```
+
+You can also run a health check from the command line:
+```bash
+# Within Docker container
+docker exec txapi /app/txapi --health
+
+# Locally
+cargo run -- --health
+
+# Using curl
+curl http://localhost:9999/health
+```
 
 ## API Reference
-
 
 
 ## Subscribing to Channels
@@ -61,5 +135,3 @@ To subscribe to a channel, you need to send a message to the server with the fol
   }
 }
 ```
-
-
