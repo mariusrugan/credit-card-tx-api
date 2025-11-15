@@ -1,9 +1,37 @@
-# Credit Card Transactions Websocket API
-Mocked credit card transactions Websocket API for experimental/educational purposes.
+# Credit Card Transactions WebSocket API 
+Mocked credit card transactions WebSocket API for experimental/educational purposes.
 
 ## Overview
-This project is a simple credit card transactions Websocket API. It is a mock of a real API that would be used to get credit card transactions,
+This project is a simple credit card transactions WebSocket API. It is a mock of a real API that would be used to get credit card transactions,
 useful for experimental/educational purposes, such as testing and developing ML models for fraud detection.
+
+## Why WebSockets
+WebSockets enable **low-latency, bidirectional streaming** with minimal overhead:
+
+**Key Benefits:**
+
+1. **Single Persistent Connection**: One handshake, then continuous data flow. HTTP requires new connection + headers for every request.
+
+2. **Server Push**: Server sends data immediately when available. No client polling needed.
+
+3. **Low Overhead**: After initial handshake, messages have ~2 bytes framing vs ~500+ bytes for HTTP headers.
+
+4. **True Bidirectional**: Both ends send/receive anytime. Essential for interactive applications.
+
+**Alternatives & Why They Fall Short:**
+
+| Method | Latency | Overhead | Complexity | Use Case |
+|--------|---------|----------|------------|----------|
+| **Polling** | High (seconds) | Very High | Low | Rarely acceptable |
+| **Long-polling** | Medium | High | Medium | Legacy fallback |
+| **Server-Sent Events** | Low | Medium | Low | One-way only |
+| **WebSockets** | Very Low (ms) | Very Low | Medium | Real-time bidirectional |
+
+**For This Project:**
+- Streaming ~10 transactions/second
+- WebSocket: 10 small messages (minimal overhead)
+- HTTP Polling: 600 requests/minute (massive waste)
+- Latency: <10ms (WebSocket) vs 1-5 seconds (polling)
 
 ### Channels
 The websocketAPI has two channels:
@@ -17,7 +45,7 @@ The websocketAPI has two channels:
 Run `make run` to start the API locally.
 The API will be available at `ws://0.0.0.0:9999/ws/v1`.
 
-Alternatively, use cargo directly:
+Alternatively, use `cargo` directly:
 ```bash
 cargo run
 ```
@@ -29,7 +57,6 @@ Control the logging verbosity using the `LOG_LEVEL` environment variable:
 
 ```bash
 LOG_LEVEL=DEBUG cargo run
-
 ```
 
 #### Graceful Shutdown
