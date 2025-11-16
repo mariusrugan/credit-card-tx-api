@@ -61,6 +61,3 @@ site/
 # Testing
 coverage/
 .nyc_output/
-
-# Misc
-/PROJECT_ANALYSIS.md
