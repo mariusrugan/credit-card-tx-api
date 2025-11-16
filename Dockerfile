@@ -1,6 +1,12 @@
-# Multi-stage build using Chainguard images
-# Stage 1: Build the application
-FROM cgr.dev/chainguard/rust:latest as builder
+#
+# docker buildx build --push -f Dockerfile --platform=linux/amd64 -t ghcr.io/mariusrugan/credit-card-tx-api:0.1.0 .
+#
+# Notes: `:latest` is because chainguard's `:latest` are free to download
+#
+# Stage 1: Builder
+# Based on: https://images.chainguard.dev/directory/image/rust/sbom
+#
+FROM cgr.dev/chainguard/rust:latest AS builder
 
 WORKDIR /app
 
@@ -15,18 +21,20 @@ COPY txapi/src ./txapi/src
 RUN cargo build --release -p txapi
 
 # Stage 2: Runtime image
-FROM cgr.dev/chainguard/glibc-dynamic:latest
+# Based on: https://images.chainguard.dev/directory/image/glibc-dynamic/sbom
+#
+FROM cgr.dev/chainguard/glibc-dynamic:latest AS runtime
 
 # OCI Labels - https://github.com/opencontainers/image-spec/blob/main/annotations.md
 LABEL org.opencontainers.image.title="Credit Card Transaction Stream API" \
       org.opencontainers.image.description="WebSocket API for streaming mock credit card transactions for fraud detection testing" \
       org.opencontainers.image.version="0.1.0" \
-      org.opencontainers.image.authors="deepbludev" \
-      org.opencontainers.image.url="https://github.com/deepbludev/credit-card-tx-api" \
-      org.opencontainers.image.source="https://github.com/deepbludev/credit-card-tx-api" \
-      org.opencontainers.image.vendor="deepbludev" \
+      org.opencontainers.image.authors="" \
+      org.opencontainers.image.url="https://github.com/mariusrugan/credit-card-tx-api" \
+      org.opencontainers.image.source="https://github.com/mariusrugan/credit-card-tx-api" \
+      org.opencontainers.image.vendor="mariusrugan" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.documentation="https://github.com/deepbludev/credit-card-tx-api/blob/main/README.md" \
+      org.opencontainers.image.documentation="https://github.com/mariusrugan/credit-card-tx-api/blob/main/README.md" \
       org.opencontainers.image.base.name="cgr.dev/chainguard/glibc-dynamic:latest"
 
 # Application labels
@@ -34,8 +42,8 @@ LABEL app.name="txapi" \
       app.component="websocket-api" \
       app.tier="backend" \
       app.language="rust" \
-      app.framework="axum" \
-      maintainer="deepbludev"
+      app.framework="" \
+      maintainer="mariusrugan"
 
 WORKDIR /app
 
