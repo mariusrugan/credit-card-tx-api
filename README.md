@@ -164,5 +164,3 @@ To subscribe to a channel, you need to send a message to the server with the fol
 ```
 
 ### Changelog
-
-- README updates #19
