@@ -99,6 +99,7 @@ docker rm txapi
 ```
 
 #### Health Check:
+
 The application includes a health check endpoint at `/health` that returns:
 ```json
 {
@@ -120,7 +121,6 @@ curl http://localhost:9999/health
 ```
 
 ## API Reference
-
 
 ## Subscribing to Channels
 
