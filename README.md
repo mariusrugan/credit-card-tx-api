@@ -71,11 +71,13 @@ Press `Ctrl+C` to gracefully shutdown the server. The server will:
 The project includes a Dockerfile using secure Chainguard base images.
 
 #### Build the Docker image:
+
 ```bash
 docker build -t txapi:latest .
 ```
 
 #### Run the container:
+
 ```bash
 # Run with default settings (INFO log level)
 docker run -p 9999:9999 txapi:latest
@@ -90,6 +92,7 @@ docker run -d -p 9999:9999 --name txapi txapi:latest
 The WebSocket API will be available at `ws://localhost:9999/ws/v1`
 
 #### Stop the container:
+
 ```bash
 docker stop txapi
 docker rm txapi
